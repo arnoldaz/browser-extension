@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+    "name": "browser-extension",
+    "version": "0.0.1",
+    "description": "",
+    "permissions": [
+        "https://myanimelist.net/",
+        "storage",
+        "contextMenus",
+        "activeTab"
+    ],
+    "content_scripts": [
+        {
+            "run_at": "document_start",
+            "matches": [
+                "https://myanimelist.net/"
+            ],
+            "js": [
+                "main.js"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+      "lib": ["es2021", "DOM"],
+      "module": "commonjs",
+      "target": "es2022",
+      "strict": false,
+      "esModuleInterop": false,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "strictNullChecks": false
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
+}
