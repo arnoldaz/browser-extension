@@ -1,3 +1,8 @@
 #content-test {
     color: #a71111 !important;
 }
+
+.not-interested-button {
+    /* width: 100px; */
+    border-width: 1px;
+}
