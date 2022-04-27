@@ -3,7 +3,7 @@ import Content from "./components/content";
 
 let once = true;
 
-const findTopTable = () => {
+const findTopTable = async () => {
     console.log("ABC");
     const table = document.querySelector("table.top-ranking-table");
     if (!table)
@@ -28,7 +28,7 @@ const findTopTable = () => {
     });
 };
 
-const updateUi: MutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver): void => {
+const updateUi: MutationCallback = async (_mutations: MutationRecord[], _observer: MutationObserver): Promise<void> => {
     findTopTable();
     const div = document.querySelector(".my_statistics > .widget-header");
     if (!div)
@@ -43,3 +43,26 @@ const updateUi: MutationCallback = (_mutations: MutationRecord[], _observer: Mut
 
 const observer = new MutationObserver(updateUi);
 observer.observe(document, { subtree: true, attributes: true });
+
+browser.storage.onChanged.addListener((changes, areaName) => {
+    console.log(changes);
+    const a = changes["toggle"];
+    console.log(a);
+
+    const check = a.newValue as boolean;
+    console.log("new: ", check);
+    const table = document.querySelector("table.top-ranking-table");
+    if (!table)
+        return;
+
+    console.log("table");
+
+    const entries = table.querySelectorAll<HTMLElement>("tr.ranking-list");
+    console.log("entries");
+    entries.forEach((value, _key, _parent) => {
+        if (value.querySelector("a.js-anime-watch-status:not(.notinmylist)")) {
+            value.style.display = check ? "none" : "";
+            console.log("found display", value.style.display);
+        }
+    });
+})

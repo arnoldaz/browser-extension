@@ -1,6 +1,16 @@
-export class Storage {
+export class TempStorage {
     private static storage = browser.storage.local;
     private static storageKey = "ignored-names";
+    private static toggleKey = "toggle";
+
+    public static async toggleHide(value: boolean): Promise<void> {
+        await this.storage.set({ [this.toggleKey]: value });
+    }
+
+    public static async getHide(): Promise<boolean> {
+        const a = await this.storage.get(this.toggleKey) as unknown as boolean;
+        return a;
+    }
 
     public static async addName(name: string): Promise<void> {
         await this.modifyNamesSet(names => names.add(name));
