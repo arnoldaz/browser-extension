@@ -1,8 +1,13 @@
-#content-test {
-    color: #a71111 !important;
+.not-interested-button {
+    border-width: 1px;
+    border-color: grey;
+    background-color: black;
+    cursor: pointer;
+    padding: 1px;
+    margin-top: 4px;
+    border-radius: 4px;
 }
 
-.not-interested-button {
-    /* width: 100px; */
-    border-width: 1px;
+.not-interested-button > img {
+    filter: invert(11%) sepia(92%) saturate(5105%) hue-rotate(359deg) brightness(93%) contrast(114%); /* red #c90000 */
 }
