@@ -11,3 +11,10 @@
 .not-interested-button > img {
     filter: invert(11%) sepia(92%) saturate(5105%) hue-rotate(359deg) brightness(93%) contrast(114%); /* red #c90000 */
 }
+
+.not-interested-override {
+    border: 1px #910000 solid !important;
+    background-color: #ffffff00 !important;
+    color: #b82e2e !important;
+    pointer-events: none !important;
+}

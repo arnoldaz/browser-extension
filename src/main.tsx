@@ -1,68 +1,96 @@
 import React from "dom-chef";
-import Content from "./components/content";
+import { ElementFinder } from "./utils/elementFinder";
+import { BrowserStorage } from "./utils/storage";
+import NotInterestedIcon from "./images/not-interested.svg";
 
-let once = true;
+function hideEntryIfNotVisible(entry: HTMLElement): void {
+    if (!isVisibleCache)
+        entry.style.display = "none";
+}
 
-const findTopTable = async () => {
-    console.log("ABC");
-    const table = document.querySelector("table.top-ranking-table");
-    if (!table)
+function makeNotInterestedStatusButton(watchStatusButton: HTMLElement): void {
+    watchStatusButton.classList.add(ElementFinder.notInterestedStatusClass);
+    watchStatusButton.textContent = "Not interested";
+}
+
+function onNotInterestedClick(target: EventTarget, entry: HTMLElement): void {
+    const notInterestedButton = target as HTMLButtonElement;
+    const parent = notInterestedButton.parentNode as HTMLElement;
+    const watchStatusButton = ElementFinder.findWatchStatusButton(parent);
+    const name = ElementFinder.findEntryName(entry);
+
+    makeNotInterestedStatusButton(watchStatusButton);
+    notInterestedButton.style.display = "none";
+    hideEntryIfNotVisible(entry);
+    BrowserStorage.addIgnoredName(name);
+}
+
+function initTopTable(): void {
+    if (!ElementFinder.isTopTablePage() || isInitialized)
         return;
 
-    if (!once)
-        return;
+    ElementFinder.forTopTableEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
+        isInitialized = true;
 
-    once = false;
-
-    console.log("DEF");
-    const entries = table.querySelectorAll<HTMLElement>("tr.ranking-list");
-
-    entries.forEach((value, _key, _parent) => {
-        if (value.querySelector("a.js-anime-watch-status:not(.notinmylist)")) {
-            value.style.display = "none";
+        if (!isNotWatched) {
+            hideEntryIfNotVisible(entry);
+            return;
         }
-        else {
-            const button = value.querySelector("a.js-anime-watch-status")
-            button.parentNode.appendChild(<Content />);
+
+        const name = ElementFinder.findEntryName(entry);
+        if (ignoredNamesCache.has(name)) {
+            makeNotInterestedStatusButton(statusButton);
+            hideEntryIfNotVisible(entry);
+            return;
         }
+
+        buttonParent.appendChild(
+            <button className="not-interested-button" onClick={(e) => onNotInterestedClick(e.currentTarget, entry)}>
+                <img src={NotInterestedIcon} />
+            </button>
+        );
     });
 };
 
-const updateUi: MutationCallback = async (_mutations: MutationRecord[], _observer: MutationObserver): Promise<void> => {
-    findTopTable();
-    const div = document.querySelector(".my_statistics > .widget-header");
-    if (!div)
-        return;
-
-    div.textContent = "Random test string!";
-
-    console.log("Before div append");
-    div.appendChild(<Content />);
-    console.log("After div append");
-};
-
-const observer = new MutationObserver(updateUi);
-observer.observe(document, { subtree: true, attributes: true });
-
-browser.storage.onChanged.addListener((changes, areaName) => {
-    console.log(changes);
-    const a = changes["toggle"];
-    console.log(a);
-
-    const check = a.newValue as boolean;
-    console.log("new: ", check);
-    const table = document.querySelector("table.top-ranking-table");
-    if (!table)
-        return;
-
-    console.log("table");
-
-    const entries = table.querySelectorAll<HTMLElement>("tr.ranking-list");
-    console.log("entries");
-    entries.forEach((value, _key, _parent) => {
-        if (value.querySelector("a.js-anime-watch-status:not(.notinmylist)")) {
-            value.style.display = check ? "none" : "";
-            console.log("found display", value.style.display);
-        }
+function initVisibleChangedListener(): void {
+    BrowserStorage.setEntriesVisibleCallback((newVisibleValue: boolean) => {
+        if (!ElementFinder.isTopTablePage())
+            return;
+    
+        isVisibleCache = newVisibleValue;
+        ElementFinder.forTopTableEntryStatusButtons(async (_statusButton, isNotWatched, _buttonParent, entry) => {
+            if (!isNotWatched)
+                entry.style.display = newVisibleValue ? "" : "none";
+        });
     });
-})
+}
+
+function init(): void {
+    const observer = new MutationObserver(() => {
+        initTopTable();
+    });
+    observer.observe(document, { subtree: true, attributes: true });
+
+    initVisibleChangedListener();
+}
+
+let isVisibleCache: boolean = null;
+let ignoredNamesCache: Set<string> = null;
+
+async function loadStorageEntries(): Promise<void> {
+    isVisibleCache = await BrowserStorage.getEntriesVisible();
+    ignoredNamesCache = await BrowserStorage.getIgnoredNames();
+}
+
+let isInitialized = false;
+
+// BrowserStorage.clearIgnoredNames().then(() => {
+//     BrowserStorage.getIgnoredNames().then((x) => {
+//         console.log("Cleaned names:", x);
+//     });
+// });
+
+loadStorageEntries().then(() => {
+    init();
+});
+

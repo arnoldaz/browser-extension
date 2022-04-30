@@ -1,34 +1,83 @@
-export class TempStorage {
-    private static storage = browser.storage.local;
-    private static storageKey = "ignored-names";
-    private static toggleKey = "toggle";
+export class BrowserStorage {
+    private static ignoredNamesKey = "ignored-names";
+    private static entriesVisibleKey = "entries-visible";
 
-    public static async toggleHide(value: boolean): Promise<void> {
-        await this.storage.set({ [this.toggleKey]: value });
+    public static async setEntriesVisible(value: boolean): Promise<void> {
+        await browser.storage.local.set({ [this.entriesVisibleKey]: value });
     }
 
-    public static async getHide(): Promise<boolean> {
-        const a = await this.storage.get(this.toggleKey) as unknown as boolean;
-        return a;
-    }
+    public static setEntriesVisibleCallback(callback: (newVisibleValue: boolean) => void): void {
+        browser.storage.onChanged.addListener((changes, areaName) => {
+            if (areaName != "local")
+                return;
 
-    public static async addName(name: string): Promise<void> {
-        await this.modifyNamesSet(names => names.add(name));
-    }
+            const value = changes[this.entriesVisibleKey];
+            if (!value)
+                return;
 
-    public static async removeName(name: string): Promise<void> {
-        await this.modifyNamesSet(names => {
-            names.delete(name);
-            return names;
+            callback(value.newValue);
         });
     }
 
-    public static async clear(): Promise<void> {
-        await this.storage.remove(this.storageKey);
+    public static async getEntriesVisible(): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            browser.storage.local.get(this.entriesVisibleKey).then((dictionary) => {
+                const isVisible = dictionary[this.entriesVisibleKey] as boolean | undefined;
+                if (isVisible === undefined)
+                    resolve(true);
+
+                resolve(isVisible);
+            });
+        });
     }
 
-    private static async modifyNamesSet(modification: (names: Set<string>) => Set<string>): Promise<void> {
-        const names = await this.storage.get(this.storageKey) as Set<string>;
-        await this.storage.set({ [this.storageKey]: modification(names) });
+    public static async getIgnoredNames(): Promise<Set<string>> {
+        return new Promise<Set<string>>((resolve) => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                if (currentNameList === undefined)
+                    resolve(new Set());
+
+                resolve(currentNameList);
+            });
+        });
+    }
+
+    public static async addIgnoredName(name: string): Promise<void> {
+        return new Promise<void>((resolve) => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                if (currentNameList === undefined)
+                    browser.storage.local.set({ [this.ignoredNamesKey]: new Set([name]) }).then(resolve);
+                else {
+                    if (currentNameList.has(name))
+                        resolve();
+        
+                    currentNameList.add(name);
+                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);                    
+                }
+            });
+        });
+    }
+
+    public static async removeIgnoredName(name: string): Promise<void> {
+        return new Promise<void>((resolve) => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                if (currentNameList === undefined)
+                    resolve();
+                else {
+                    if (!currentNameList.has(name))
+                        resolve();
+
+                    currentNameList.delete(name);
+                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);                    
+                }
+            });
+        });
+    }
+
+    public static async clearIgnoredNames(): Promise<void> {
+        await browser.storage.local.remove(this.ignoredNamesKey);
     }
 }
