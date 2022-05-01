@@ -12,7 +12,7 @@ const config: Configuration = {
     },
     entry: {
         main: "./src/main.tsx",
-        popup: "./src/popup/popup-index.tsx",
+        popup: "./src/popup/popupIndex.tsx",
     },
     output: {
         path: resolve(__dirname, "dist"),
