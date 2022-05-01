@@ -1,10 +1,12 @@
 export type EntryStatusButtonCallback = (statusButton: HTMLElement, isNotWatched: boolean, buttonParent: HTMLElement, entry: HTMLElement) => void;
+export type EntryNameCallback = (name: string, entry: HTMLElement) => void;
 
 export class ElementFinder {
     private static topTableQuery = "table.top-ranking-table";
     private static allEntriesQuery = "tr.ranking-list";
     private static watchStatusButtonQuery = "a.js-anime-watch-status";
     private static titleHeaderQuery = "h3.anime_ranking_h3 > a";
+    private static notInterestedButtonQuery = ".not-interested-button";
 
     private static notWatchedStatusClass = "notinmylist";
     public static notInterestedStatusClass = "not-interested-override";
@@ -13,9 +15,9 @@ export class ElementFinder {
         return this.findTopTable() != null;
     }
 
-    public static async forTopTableEntryStatusButtons(callback: EntryStatusButtonCallback): Promise<void> {
+    public static forTopTableEntryStatusButtons(callback: EntryStatusButtonCallback): void {
         const entries = this.findTopTableEntries();
-        entries?.forEach(async (entry: HTMLElement) => {
+        entries?.forEach((entry: HTMLElement) => {
             const statusButton = this.findWatchStatusButton(entry);
             const isNotWatched = this.isButtonNotWatched(statusButton);
             const parent = statusButton.parentNode as HTMLElement;
@@ -31,6 +33,10 @@ export class ElementFinder {
         return entry.querySelector(this.titleHeaderQuery).textContent;
     }
 
+    public static findNotInterestedButton(statusButtonParent: HTMLElement): HTMLElement | null {
+        return statusButtonParent.querySelector(this.notInterestedButtonQuery);
+    }
+
     private static findTopTable(): HTMLElement | null {
         return document.querySelector(this.topTableQuery);
     }
@@ -44,5 +50,4 @@ export class ElementFinder {
         return watchStatusButton.classList.contains(this.notWatchedStatusClass)
             && !watchStatusButton.classList.contains(this.notInterestedStatusClass);
     }
-
 }

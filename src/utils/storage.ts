@@ -31,6 +31,25 @@ export class BrowserStorage {
         });
     }
 
+    public static setIgnoredNamesRemovedCallback(callback: (removedName: string) => void): void {
+        browser.storage.onChanged.addListener((changes, areaName) => {
+            if (areaName != "local")
+                return;
+
+            const value = changes[this.ignoredNamesKey];
+            if (!value)
+                return;
+
+            const oldValues = value.oldValue as Set<string>;
+            const newValues = value.newValue as Set<string>;
+            if (oldValues.size <= newValues.size)
+                return;
+
+            const removedValues = [...oldValues].filter(oldValue => !newValues.has(oldValue));
+            removedValues.forEach(removedValue => callback(removedValue));
+        });
+    }
+
     public static async getIgnoredNames(): Promise<Set<string>> {
         return new Promise<Set<string>>((resolve) => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
@@ -54,7 +73,7 @@ export class BrowserStorage {
                         resolve();
         
                     currentNameList.add(name);
-                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);                    
+                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
                 }
             });
         });
@@ -66,13 +85,12 @@ export class BrowserStorage {
                 const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
                 if (currentNameList === undefined)
                     resolve();
-                else {
-                    if (!currentNameList.has(name))
-                        resolve();
 
-                    currentNameList.delete(name);
-                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);                    
-                }
+                if (!currentNameList.has(name))
+                    resolve();
+
+                currentNameList.delete(name);
+                browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
             });
         });
     }

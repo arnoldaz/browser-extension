@@ -1,7 +1,5 @@
 {
-  "name": "browser-extension",
-  "version": "0.0.1",
-  "description": "",
+  "private": true,
   "scripts": {
     "build": "webpack --mode=production",
     "watch": "webpack --mode=development --watch"
