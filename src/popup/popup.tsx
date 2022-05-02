@@ -51,6 +51,9 @@ export default function Popup(): JSX.Element {
                     <i>Empty</i>
                 </p>
             }
+            <a href={`data:text/html,${JSON.stringify(ignoredNames)}`} download="mal-extension-export.json">
+                <button>Export</button>
+            </a>
         </div>
     );
 }
