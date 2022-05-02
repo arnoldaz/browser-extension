@@ -50,4 +50,37 @@ export class ElementFinder {
         return watchStatusButton.classList.contains(this.notWatchedStatusClass)
             && !watchStatusButton.classList.contains(this.notInterestedStatusClass);
     }
+
+    private static searchTableQuery = "div.seasonal-anime-list.js-seasonal-anime-list";
+    private static allSearchEntriesQuery = "div.js-anime-category-producer.seasonal-anime";
+    private static titleHeaderSearchQuery = "h2.h2_anime_title > a";
+
+    public static isSearchTablePage(): boolean {
+        return this.findSearchTables() != null;
+    }
+
+    public static findSearchTables(): NodeListOf<HTMLElement> | null {
+        return document.querySelectorAll<HTMLElement>(this.searchTableQuery);
+    }
+
+    public static findSearchEntries(): HTMLElement[] | null {
+        const tables = this.findSearchTables();
+        const searchEntries: HTMLElement[] = [];
+        tables?.forEach(table => 
+            table.querySelectorAll<HTMLElement>(this.allSearchEntriesQuery)
+                .forEach(entry => searchEntries.push(entry))
+        );
+
+        return searchEntries;
+    }
+
+    public static forSearchTableEntryStatusButtons(callback: EntryStatusButtonCallback): void {
+        const entries = this.findSearchEntries();
+        entries?.forEach((entry: HTMLElement) => {
+            const statusButton = this.findWatchStatusButton(entry);
+            const isNotWatched = this.isButtonNotWatched(statusButton);
+            const parent = statusButton.parentNode as HTMLElement;
+            callback(statusButton, isNotWatched, parent, entry);
+        });
+    }
 }
