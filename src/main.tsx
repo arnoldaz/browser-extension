@@ -35,11 +35,11 @@ function onNotInterestedClick(target: EventTarget, entry: HTMLElement): void {
     BrowserStorage.addIgnoredName(name);
 }
 
-function initTopTable(): void {
-    if (!ElementFinder.isTopTablePage() || isInitialized)
+function initPage(): void {
+    if (!ElementFinder.isSupportedPage() || isInitialized)
         return;
 
-    ElementFinder.forTopTableEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
+    ElementFinder.forEachEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
         isInitialized = true;
 
         if (!isNotWatched) {
@@ -68,11 +68,11 @@ function initTopTable(): void {
 
 function initVisibleChangedListener(): void {
     BrowserStorage.setEntriesVisibleCallback((newVisibleValue: boolean) => {
-        if (!ElementFinder.isTopTablePage())
+        if (!ElementFinder.isSupportedPage())
             return;
     
         isVisibleCache = newVisibleValue;
-        ElementFinder.forTopTableEntryStatusButtons((_statusButton, isNotWatched, _buttonParent, entry) => {
+        ElementFinder.forEachEntryStatusButtons((_statusButton, isNotWatched, _buttonParent, entry) => {
             if (!isNotWatched)
                 entry.style.display = newVisibleValue ? "" : "none";
         });
@@ -81,11 +81,11 @@ function initVisibleChangedListener(): void {
 
 function initIgnoredNamesRemovedListener(): void {
     BrowserStorage.setIgnoredNamesRemovedCallback((removedName: string) => {
-        if (!ElementFinder.isTopTablePage())
+        if (!ElementFinder.isSupportedPage())
             return;
 
         ignoredNamesCache.delete(removedName);
-        ElementFinder.forTopTableEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
+        ElementFinder.forEachEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
             const name = ElementFinder.findEntryName(entry);
             if (name != removedName)
                 return;
@@ -99,9 +99,7 @@ function initIgnoredNamesRemovedListener(): void {
 }
 
 function init(): void {
-    const observer = new MutationObserver(() => {
-        initTopTable();
-    });
+    const observer = new MutationObserver(initPage);
     observer.observe(document, { subtree: true, attributes: true });
 
     initVisibleChangedListener();
@@ -118,7 +116,5 @@ async function loadStorageEntries(): Promise<void> {
 
 let isInitialized = false;
 
-loadStorageEntries().then(() => {
-    init();
-});
+loadStorageEntries().then(init);
 
