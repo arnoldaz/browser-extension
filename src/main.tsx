@@ -35,7 +35,9 @@ function onNotInterestedClick(target: EventTarget, entry: HTMLElement): void {
     BrowserStorage.addIgnoredName(name);
 }
 
-function initPage(): void {
+function initPage(mutations: MutationRecord[], observer: MutationObserver): void {
+    console.log(mutations, observer);
+
     if (!ElementFinder.isSupportedPage() || isInitialized)
         return;
 

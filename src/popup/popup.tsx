@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserStorage } from "../utils/storage";
 import "./popup.css";
 
-export default function Popup(): JSX.Element {
+export default function Popup() {
     const [hideWatchedValue, setHideWatchedValue] = useState<boolean>(null);
     const [ignoredNames, setIgnoredNames] = useState<string[]>(null);
 

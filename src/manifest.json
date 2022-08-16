@@ -9,9 +9,14 @@
         "contextMenus",
         "activeTab"
     ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "mal-extension@arnoldaz.com"
+        }
+    },
     "content_scripts": [
         {
-            "run_at": "document_start",
+            "run_at": "document_end",
             "matches": [
                 "https://myanimelist.net/*"
             ],
@@ -25,5 +30,9 @@
     ],
     "browser_action": {
         "default_popup": "popup.html"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
     }
 }

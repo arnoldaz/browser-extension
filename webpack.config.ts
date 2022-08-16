@@ -12,14 +12,15 @@ const config: Configuration = {
     },
     entry: {
         main: "./src/main.tsx",
-        popup: "./src/popup/popupIndex.tsx",
+        popup: "./src/popup/index.tsx",
+        options: "./src/options/index.tsx",
     },
     output: {
         path: resolve(__dirname, "dist"),
         filename: "[name].js"
     },
     resolve: {
-        extensions: [".tsx", ".ts"]
+        extensions: [".tsx", ".ts", ".jsx", ".js"],
     },
     module: {
         rules: [
@@ -48,6 +49,12 @@ const config: Configuration = {
         new HtmlWebpackPlugin({
             filename: "popup.html",
             template: "./src/popup/popup.html",
+            chunks: ["popup"],
+        }),
+        new HtmlWebpackPlugin({
+            filename: "options.html",
+            template: "./src/options/options.html",
+            chunks: ["options"],
         }),
     ],
 };
