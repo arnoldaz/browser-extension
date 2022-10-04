@@ -11,7 +11,9 @@ export class ElementFinder {
     private static watchStatusButtonQuery = "a.js-anime-watch-status";
     private static topTableTitleHeaderQuery = "h3.anime_ranking_h3 > a";
     private static searchTableTitleHeaderQuery = "h2.h2_anime_title > a";
-    
+
+    private static seasonalMiddleAdQuery = "div.js-middle_ad";
+
     private static notInterestedButtonQuery = ".not-interested-button";
 
     private static notWatchedStatusClass = "notinmylist";
@@ -25,7 +27,7 @@ export class ElementFinder {
         return document.querySelector(this.topTableQuery);
     }
 
-    public static findSearchTables(): NodeListOf<HTMLElement> | null {
+    public static findSearchTables(): NodeListOf<HTMLElement> {
         return document.querySelectorAll<HTMLElement>(this.searchTableQuery);
     }
 
@@ -44,7 +46,7 @@ export class ElementFinder {
         return table?.querySelectorAll<HTMLElement>(this.allTopTableEntriesQuery);
     }
 
-    public static findSearchTableEntries(): HTMLElement[] | null {
+    public static findSearchTableEntries(): HTMLElement[] {
         const tables = this.findSearchTables();
         const searchEntries: HTMLElement[] = [];
         tables?.forEach(table => 
@@ -78,5 +80,16 @@ export class ElementFinder {
     private static isButtonNotWatched(watchStatusButton: Element): boolean {
         return watchStatusButton.classList.contains(this.notWatchedStatusClass)
             && !watchStatusButton.classList.contains(this.notInterestedStatusClass);
+    }
+
+    public static findSeasonalAds(): HTMLElement[] {
+        const tables = this.findSearchTables();
+        const seasonalAds: HTMLElement[] = [];
+        tables?.forEach(table => 
+            table.querySelectorAll<HTMLElement>(this.seasonalMiddleAdQuery)
+                .forEach(entry => seasonalAds.push(entry))
+        );
+
+        return seasonalAds;
     }
 }

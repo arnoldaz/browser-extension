@@ -1,11 +1,23 @@
-export class BrowserStorage {
-    private static ignoredNamesKey = "ignored-names";
-    private static entriesVisibleKey = "entries-visible";
 
+/**
+ * Helper class for managing data in browser local storage.
+ */
+export class BrowserStorage {
+    private static entriesVisibleKey = "entries-visible";
+    private static ignoredNamesKey = "ignored-names";
+
+    /**
+     * Sets entries visible value in local storage.
+     * @param value Value to set.
+     */
     public static async setEntriesVisible(value: boolean): Promise<void> {
         await browser.storage.local.set({ [this.entriesVisibleKey]: value });
     }
 
+    /**
+     * Adds listener for entries visible value change in local storage.
+     * @param callback Callback to call when entries visible value has changed.
+     */
     public static setEntriesVisibleCallback(callback: (newVisibleValue: boolean) => void): void {
         browser.storage.onChanged.addListener((changes, areaName) => {
             if (areaName != "local")
@@ -19,6 +31,10 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Gets entries visible value from local storage.
+     * @returns Saved entries visible value. Defaults to true if never set.
+     */
     public static async getEntriesVisible(): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
             browser.storage.local.get(this.entriesVisibleKey).then((dictionary) => {
@@ -31,6 +47,10 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Adds listener for removing ignored name from local storage.
+     * @param callback Callback to call when ignored name has been removed.
+     */
     public static setIgnoredNamesRemovedCallback(callback: (removedName: string) => void): void {
         browser.storage.onChanged.addListener((changes, areaName) => {
             if (areaName != "local")
@@ -50,6 +70,10 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Gets all ignored names from local storage.
+     * @returns All saved ignored names.
+     */
     public static async getIgnoredNames(): Promise<Set<string>> {
         return new Promise<Set<string>>((resolve) => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
@@ -62,6 +86,10 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Adds ignored name to local storage.
+     * @param name Ignored name to add.
+     */
     public static async addIgnoredName(name: string): Promise<void> {
         return new Promise<void>((resolve) => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
@@ -79,6 +107,10 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Removes ignored name from local storage.
+     * @param name Ignored name to remove.
+     */
     public static async removeIgnoredName(name: string): Promise<void> {
         return new Promise<void>((resolve) => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
@@ -95,6 +127,9 @@ export class BrowserStorage {
         });
     }
 
+    /**
+     * Removes all ignored names from local storage.
+     */
     public static async clearIgnoredNames(): Promise<void> {
         await browser.storage.local.remove(this.ignoredNamesKey);
     }

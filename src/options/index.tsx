@@ -27,12 +27,12 @@ function Options() {
     }, []);
 
     return (
-        // @ts-ignore
+
         <ThemeProvider theme={createTheme({ palette: { mode: "dark" }})}>
             <CssBaseline />
             {// @ts-ignore
                 <OptionsTable
-                    ignoredNames={ignoredNames}
+                    data={ignoredNames}
                 >
 
                 </OptionsTable>

@@ -55,17 +55,17 @@ function getComparator<Key extends keyof any>(
 export type Data = { id: number, name: string };
 
 interface OptionsTableProps {
-    ignoredNames: readonly Data[];
+    data: readonly Data[];
 }
 
-export default function OptionsTable({ ignoredNames }: OptionsTableProps) {
+export default function OptionsTable({ data }: OptionsTableProps) {
     const [order, setOrder] = React.useState<Order>("asc");
     const [orderBy, setOrderBy] = React.useState<string>("id");
     const [selected, setSelected] = React.useState<readonly number[]>([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(20);
 
-    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - ignoredNames.length) : 0;
+    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
 
     const isSelected = (name: number) => selected.indexOf(name) !== -1;
 
@@ -159,9 +159,9 @@ export default function OptionsTable({ ignoredNames }: OptionsTableProps) {
                                 <TableCell padding="checkbox">
                                     <Checkbox
                                         color="primary"
-                                        indeterminate={selected.length > 0 && selected.length < ignoredNames.length}
-                                        checked={ignoredNames.length > 0 && selected.length === ignoredNames.length}
-                                        onChange={event => setSelected(event.target.checked ? ignoredNames.map(row => row.id) : [])}
+                                        indeterminate={selected.length > 0 && selected.length < data.length}
+                                        checked={data.length > 0 && selected.length === data.length}
+                                        onChange={event => setSelected(event.target.checked ? data.map(row => row.id) : [])}
                                     />
                                 </TableCell>
                                 {[ 
@@ -186,7 +186,7 @@ export default function OptionsTable({ ignoredNames }: OptionsTableProps) {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {ignoredNames.slice().sort(getComparator(order, orderBy))
+                            {data.slice().sort(getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
                                     const isItemSelected = isSelected(row.id);
@@ -230,7 +230,7 @@ export default function OptionsTable({ ignoredNames }: OptionsTableProps) {
                 <TablePagination
                     rowsPerPageOptions={[20, 50, 100, { label: "All", value: -1 }]}
                     component="div"
-                    count={ignoredNames.length}
+                    count={data.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={(_, newPage) => setPage(newPage)}
