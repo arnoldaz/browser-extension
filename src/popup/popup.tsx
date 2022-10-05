@@ -30,6 +30,10 @@ export default function Popup() {
         await BrowserStorage.removeIgnoredName(name);
     };
 
+    const downloadData = () => {
+        return encodeURIComponent(JSON.stringify(ignoredNames, undefined, 2));
+    };
+
     return (
         <div className="popup-main">
             <label className="popup-checkbox">
@@ -51,9 +55,44 @@ export default function Popup() {
                     <i>Empty</i>
                 </p>
             }
-            <a href={`data:text/html,${JSON.stringify(ignoredNames)}`} download="mal-extension-export.json">
+            <a href={`data:text/json;charset=utf-8,${downloadData()}`} download="mal-extension-export.json">
                 <button>Export</button>
             </a>
+            {/* <input type="file" onChange={(e) => {
+                // getting a hold of the file reference
+                var file = e.target.files[0]; 
+
+                console.log(file);
+
+                // setting up the reader
+                var reader = new FileReader();
+                reader.readAsText(file,'UTF-8');
+
+                // here we tell the reader what to do when it's done reading...
+                reader.onload = readerEvent => {
+                    var content = readerEvent.target.result; // this is the content!
+                    
+                    var stringContent: string;
+
+                    if (content instanceof ArrayBuffer)
+                        stringContent = String.fromCharCode.apply(null, new Uint16Array(content));
+                    else 
+                        stringContent = content;
+
+                    var object = JSON.parse(stringContent);
+
+                    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+                        JSON.stringify(object)
+                      )}`;
+                      const link = document.createElement("a");
+                      link.href = jsonString;
+                      link.download = "data.json";
+                  
+                      link.click();
+                }
+            }}>
+
+            </input> */}
         </div>
     );
 }

@@ -14,6 +14,13 @@
     filter: invert(11%) sepia(92%) saturate(5105%) hue-rotate(359deg) brightness(93%) contrast(114%);
 }
 
+.not-interested-status-search-page {
+    border: 1px #550000 solid !important;
+    background-color: #550000 !important;
+    pointer-events: none !important;
+}
+
+/* RENAME TO .not-interested-status-top-page */
 .not-interested-override {
     border: 1px #910000 solid !important;
     background-color: #ffffff00 !important;

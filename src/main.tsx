@@ -120,23 +120,11 @@ function initPage(): void {
             const newButton = createNotInterestedButton(entry, isVisible);
             buttonParent.appendChild(newButton);            
         }
-
-
-        // buttonParent.appendChild(
-        //     <button 
-        //         className="not-interested-button"
-        //         onClick={e => onNotInterestedClick(e.currentTarget as HTMLButtonElement, entry)} 
-        //         style={{display: isVisible ? "" : "none"}}>
-        //         <img src={NotInterestedIcon} />
-        //     </button>
-        // );
     });
 
     ElementFinder.findSeasonalAds()?.forEach(ad => setElementVisibleStatus(ad, false));
 
-    console.log("now");
     isInitialized = true;
-
 };
 
 /**
@@ -163,7 +151,6 @@ function initVisibleChangedListener(): void {
  */
 function initIgnoredNamesRemovedListener(): void {
     BrowserStorage.setIgnoredNamesRemovedCallback((removedName: string) => {
-        console.log("gogoč");
         if (!ElementFinder.isSupportedPage())
             return;
 
