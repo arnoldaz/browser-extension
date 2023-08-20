@@ -3,8 +3,8 @@
  * Helper class for managing data in browser local storage.
  */
 export class BrowserStorage {
-    private static entriesVisibleKey = "entries-visible";
-    private static ignoredNamesKey = "ignored-names";
+    private static readonly entriesVisibleKey = "entries-visible";
+    private static readonly ignoredNamesKey = "ignored-names";
 
     /**
      * Sets entries visible value in local storage.

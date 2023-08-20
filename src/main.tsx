@@ -1,6 +1,7 @@
 import { ElementFinder } from "./utils/elementFinder";
 import { BrowserStorage } from "./utils/storage";
 import NotInterestedIcon from "./images/not-interested.svg";
+import { getPageWrapper, PageWrapper } from "./utils/pageWrappers";
 
 /** Text to set for "Not interested" button. */
 const notInterestedButtonText: string = "Not interested";
@@ -18,7 +19,7 @@ function setElementVisibleStatus(element: HTMLElement, isVisible: boolean): void
 
 /**
  * Helper function to instantly hide entry if currently entries are set to not be visible.
- * @param entry Entry to optionally hide.
+ * @param entry Entry to conditionally hide.
  */
 function hideEntryIfNotVisible(entry: HTMLElement): void {
     if (!isEntriesVisibleCache)
@@ -99,6 +100,8 @@ function createNotInterestedButton(entry: HTMLElement, isVisible: boolean): HTML
  * Initializes page by looping and modifying entries depending on pre-loaded options.
  */
 function initPage(): void {
+    initPageWrapper();
+
     if (!ElementFinder.isSupportedPage())
         return;
 
@@ -126,6 +129,13 @@ function initPage(): void {
 
     isInitialized = true;
 };
+
+function initPageWrapper(): void {
+    if (pageWrapper)
+        return;
+
+    pageWrapper = getPageWrapper();
+}
 
 /**
  * Adds listener for entries visible value to live refresh entry visibility.
@@ -174,6 +184,8 @@ let isEntriesVisibleCache: boolean;
 let ignoredNamesCache: Set<string>;
 /** Whether page has been initialized, will reset when new page loads. */
 let isInitialized = false;
+/** Page wrapper for supported pages. */
+let pageWrapper: PageWrapper | null;
 
 /**
  * Initializes document change observer to call initialization once it's loaded
