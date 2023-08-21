@@ -1,7 +1,4 @@
 
-
-
-
 /** Callback type for iterating through entries. */
 export type EntryCallback = (entry: Entry, entryName: string, statusButton: StatusButton, isStatusInList: boolean, statusButtonParent: StatusButtonParent) => void;
 
@@ -14,8 +11,10 @@ export type StatusButton = HTMLElement;
 /** Parent of status button HTML element type. */
 export type StatusButtonParent = HTMLElement;
 
-
-
+/**
+ * Helper function to get page wrapper for current page by trying all possibilities.
+ * @returns Page wrapper instance if load succeded, null otherwise.
+ */
 export function getPageWrapper(): PageWrapper | null {
     const topTablePageWrapper = new TopTablePageWrapper();
     if (topTablePageWrapper.tryLoadPage())
@@ -32,6 +31,7 @@ export function getPageWrapper(): PageWrapper | null {
     return null;
 }
 
+/** Base page wrapper instance for querying various part of the page. */
 export abstract class PageWrapper {
     protected mainTables: MainTable[];
     protected entries: Entry[];
@@ -44,6 +44,10 @@ export abstract class PageWrapper {
 
     public abstract readonly notInterestedStatusClass: string;
 
+    /**
+     * Tries to load the page into the wrapper.
+     * @returns True if page was successfully loaded, false otherwise.
+     */
     public tryLoadPage(): boolean {
         const mainTables = this.getMainTables();
         if (!mainTables)
@@ -54,6 +58,10 @@ export abstract class PageWrapper {
         return true;
     }
 
+    /**
+     * For each implementation for page entries.
+     * @param callback Callback to call for each entry with additional useful parameters.
+     */
     public forEachEntry(callback: EntryCallback): void {
         this.entries.forEach(entry => {
             const entryName = this.getEntryName(entry);
@@ -64,29 +72,56 @@ export abstract class PageWrapper {
         });
     }
 
+    /**
+     * Gets a list of main tables by querying currently open document.
+     * @returns List of main tables.
+     */
     public getMainTables(): MainTable[] {
         return Array.from(document.querySelectorAll<MainTable>(this.mainTableQuery));
     }
 
+    /**
+     * Gets a list of entries by querying main tables.
+     * @param mainTables List of main tables to query.
+     * @returns List of entries.
+     */
     public getEntries(mainTables: MainTable[]): Entry[] {
         return mainTables
             .map(mainTable => Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery)))
             .reduce((accumulator, singleTableEntries) => accumulator.concat(singleTableEntries), []);
     }
 
+    /**
+     * Gets status button by querying entry of status button parent.
+     * @param entry Entry or status button parent.
+     * @returns Status button.
+     */
     public getStatusButton(entry: Entry | StatusButtonParent): StatusButton {
         return entry.querySelector<StatusButton>(this.statusButtonQuery);
     }
 
+    /**
+     * Gets entry name by querying entry and parsing its text content.
+     * @returns Entry name string.
+     */
     public getEntryName(entry: Entry): string {
         return entry.querySelector(this.entryNameQuery).textContent;
     }
 
+    /**
+     * Gets whether watch status button has watched status.
+     * @param watchStatusButton Status button to check for status.
+     * @returns True if status button is watched status (watching, completed, etc) or is marked as not interested.
+     */
     public isStatusWatched(watchStatusButton: StatusButton): boolean {
         return watchStatusButton.classList.contains(this.notInterestedStatusClass)
             || !watchStatusButton.classList.contains(this.notWatchedStatusClass)
     }
 
+    /**
+     * Gets custom list of elements that should be removed or hidden, e.g. ads.
+     * @returns List of unnecessary HTML elements.
+     */
     public getRemovableElements(): HTMLElement[] {
         return [];
     }

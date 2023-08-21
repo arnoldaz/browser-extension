@@ -1,6 +1,7 @@
 export type EntryStatusButtonCallback = (statusButton: HTMLElement, isNotWatched: boolean, buttonParent: HTMLElement, entry: HTMLElement) => void;
 export type EntryNameCallback = (name: string, entry: HTMLElement) => void;
 
+/** Deprecated, need to delete */
 export class ElementFinder {
     private static topTableQuery = "table.top-ranking-table";
     private static searchTableQuery = "div.seasonal-anime-list";
