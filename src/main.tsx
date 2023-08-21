@@ -1,127 +1,70 @@
 import { ElementFinder } from "./utils/elementFinder";
 import { BrowserStorage } from "./utils/storage";
-import NotInterestedIcon from "./images/not-interested.svg";
-import { getPageWrapper, PageWrapper } from "./utils/pageWrappers";
+import { Entry, getPageWrapper, PageWrapper } from "./utils/pageWrappers";
+import { ButtonTransformer, setElementVisibleStatus } from "./utils/buttonTransformer";
 
-/** Text to set for "Not interested" button. */
-const notInterestedButtonText: string = "Not interested";
-/** Class name to set for "Not interested" button. */
-const notInterestedButtonClassName: string = "not-interested-button";
 
-/**
- * Helper function to set HTML element visibility.
- * @param element HTML element to set visibility.
- * @param isVisible Whether element should be visible.
- */
-function setElementVisibleStatus(element: HTMLElement, isVisible: boolean): void {
-    element.style.display = isVisible ? "" : "none";
+/** Status for entry visibility when list page is open. */
+export enum EntryVisibilityStatus {
+    /**
+     * Default status where everything is visible.
+     */
+    Default = "default",
+    /**
+     * Hides entries in list (watching, completed, etc) and not interested,
+     * leaving only entries not in any list.
+     */
+    NotInListOnly = "not-in-list-only",
+    /**
+     * Hides only not interested entries, leaving all the other entries.
+     */
+    HideNotInteresteOnly = "hide-not-interested",
+    /**
+     * Leaves only entries in list (watching, completed, etc) by hiding all not interested
+     * and not in list entries.
+     */
+    InListOnly = "in-list-only",
 }
 
 /**
  * Helper function to instantly hide entry if currently entries are set to not be visible.
  * @param entry Entry to conditionally hide.
  */
-function hideEntryIfNotVisible(entry: HTMLElement): void {
+function hideEntryIfNotVisible(entry: Entry): void {
     if (!isEntriesVisibleCache)
         setElementVisibleStatus(entry, false);
 }
 
-/**
- * Watch status button text before it was transformed into "Not interested" button.
- * It needs to be saved, since there is no other way to restore it into the previous state.
- */
- let oldWatchStatusButtonText: string;
-
-/**
- * Transforms watch status button into "Not interested" button.
- * @param watchStatusButton Watch status button to transform.
- */
-function transformNotInterestedStatusButton(watchStatusButton: HTMLElement): void {
-    watchStatusButton.classList.add(ElementFinder.notInterestedStatusClass);
-    if (!oldWatchStatusButtonText)
-        oldWatchStatusButtonText = watchStatusButton.textContent;
-
-    watchStatusButton.textContent = notInterestedButtonText;
-}
-
-/**
- * Undo "Not interesting" status from given watch status button,
- * that was set using {@link transformNotInterestedStatusButton} function.
- * @param watchStatusButton Watch status button to restore to original.
- */
-function undoNotInterestedStatusButton(watchStatusButton: HTMLElement): void {
-    watchStatusButton.classList.remove(ElementFinder.notInterestedStatusClass);
-    if (!oldWatchStatusButtonText)
-        console.error("oldWatchStatusButtonText was never set");
-
-    watchStatusButton.textContent = oldWatchStatusButtonText;
-}
-
-/**
- * Adds new entry to not interested, transforms watch status into "Not interested"
- * and hides caller button.
- * @param notInterestedButton "Not interested" button that was clicked.
- * @param entry Parent entry to add to not interested.
- */
-function onNotInterestedClick(notInterestedButton: HTMLButtonElement, entry: HTMLElement): void {
-    const parent = notInterestedButton.parentNode as HTMLElement;
-    const watchStatusButton = ElementFinder.findWatchStatusButton(parent);
-    const entryName = ElementFinder.findEntryName(entry);
-
-    transformNotInterestedStatusButton(watchStatusButton);
-    setElementVisibleStatus(notInterestedButton, false);
-    hideEntryIfNotVisible(entry);
-
-    ignoredNamesCache.add(entryName);
-    BrowserStorage.addIgnoredName(entryName);
-}
-
-/**
- * Creates "Not interested" HTML button.
- * @param entry Entry to bind for on click action.
- * @param isVisible Whether it should be instantly visible or hidden.
- * @returns Created button.
- */
-function createNotInterestedButton(entry: HTMLElement, isVisible: boolean): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.classList.add(notInterestedButtonClassName);
-    button.onclick = () => onNotInterestedClick(button, entry);
-
-    const buttonImage = document.createElement("img");
-    buttonImage.src = NotInterestedIcon;
-
-    button.appendChild(buttonImage);
-    setElementVisibleStatus(button, isVisible);
-
-    return button;
-}
-
-/**
- * Initializes page by looping and modifying entries depending on pre-loaded options.
- */
+/** Initializes page by looping and modifying entries depending on pre-loaded options. */
 function initPage(): void {
-    initPageWrapper();
-
-    if (!ElementFinder.isSupportedPage())
+    if (!ensurePageWrapperInitialized())
         return;
 
-    ElementFinder.forEachEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
-        if (!isNotWatched) {
+    pageWrapper.forEachEntry((entry, statusButton, isStatusInList, buttonParent) => {
+        // If entry is in list, no need to add any additional functionality, just edit visibility if needed
+        if (isStatusInList) {
             hideEntryIfNotVisible(entry);
             return;
         }
 
+        // If entry is already in ignored names list, transform the status button and edit entry visibility
         let isVisible = true;
-        const name = ElementFinder.findEntryName(entry);
-        if (ignoredNamesCache.has(name)) {
-            transformNotInterestedStatusButton(statusButton);
+        if (ignoredNamesCache.has(pageWrapper.getEntryName(entry))) {
+            buttonTransformer.transformNotInterestedStatusButton(statusButton);
             hideEntryIfNotVisible(entry);
             isVisible = false;
         }
 
+        // If entry is not in list, attach new button besides it, but only once
         if (!isInitialized) {
-            const newButton = createNotInterestedButton(entry, isVisible);
-            buttonParent.appendChild(newButton);            
+            const newButton = buttonTransformer.createNotInterestedButton(entry, isVisible, (entry) => {
+                hideEntryIfNotVisible(entry);
+                
+                const entryName = this.pageWrapper.getEntryName(entry);
+                ignoredNamesCache.add(entryName);
+                BrowserStorage.addIgnoredName(entryName);
+            });
+            buttonParent.appendChild(newButton);
         }
     });
 
@@ -130,48 +73,47 @@ function initPage(): void {
     isInitialized = true;
 };
 
-function initPageWrapper(): void {
+function ensurePageWrapperInitialized(): boolean {
     if (pageWrapper)
-        return;
+        return true;
 
     pageWrapper = getPageWrapper();
+    if (!pageWrapper)
+        return false;
+
+    buttonTransformer = new ButtonTransformer(pageWrapper);
+    return true;
 }
 
-/**
- * Adds listener for entries visible value to live refresh entry visibility.
- */
+/** Adds listener for entries visible value to live refresh entry visibility. */
 function initVisibleChangedListener(): void {
-    BrowserStorage.setEntriesVisibleCallback((newIsVisibleValue: boolean) => {
-        console.log("gogo");
-        if (!ElementFinder.isSupportedPage())
+    BrowserStorage.setEntriesVisibleCallback((newIsEntriesVisibleValue: boolean) => {
+        if (!ensurePageWrapperInitialized())
             return;
     
-        isEntriesVisibleCache = newIsVisibleValue;
-        ElementFinder.forEachEntryStatusButtons((_statusButton, isNotWatched, _buttonParent, entry) => {
-            if (!isNotWatched)
-                setElementVisibleStatus(entry, newIsVisibleValue);
+        isEntriesVisibleCache = newIsEntriesVisibleValue;
+        pageWrapper.forEachEntry((entry, _statusButton, isStatusInList, _buttonParent) => {
+            if (isStatusInList)
+                setElementVisibleStatus(entry, newIsEntriesVisibleValue);
         });
 
         ElementFinder.findSeasonalAds()?.forEach(ad => setElementVisibleStatus(ad, false));
     });
 }
 
-/**
- * Adds listener for ignored names removal to live refresh removed ignored entry.
- */
+/** Adds listener for ignored names removal to live refresh removed ignored entry. */
 function initIgnoredNamesRemovedListener(): void {
     BrowserStorage.setIgnoredNamesRemovedCallback((removedName: string) => {
-        if (!ElementFinder.isSupportedPage())
+        if (!ensurePageWrapperInitialized())
             return;
 
         ignoredNamesCache.delete(removedName);
-        ElementFinder.forEachEntryStatusButtons((statusButton, isNotWatched, buttonParent, entry) => {
-            const name = ElementFinder.findEntryName(entry);
-            if (name !== removedName)
+        pageWrapper.forEachEntry((entry, statusButton, _isStatusInList, buttonParent) => {
+            if (pageWrapper.getEntryName(entry) !== removedName)
                 return;
 
-            const notInterestedButton = ElementFinder.findNotInterestedButton(buttonParent);
-            undoNotInterestedStatusButton(statusButton);
+            const notInterestedButton = buttonTransformer.getNotInterestedButton(buttonParent);
+            buttonTransformer.undoNotInterestedStatusButton(statusButton);
             setElementVisibleStatus(entry, true);
             setElementVisibleStatus(notInterestedButton, true);
         });
@@ -187,6 +129,8 @@ let isInitialized = false;
 /** Page wrapper for supported pages. */
 let pageWrapper: PageWrapper | null;
 
+let buttonTransformer: ButtonTransformer;
+
 /**
  * Initializes document change observer to call initialization once it's loaded
  * and adds browser local storage change listeners.
@@ -199,9 +143,7 @@ function init(): void {
     initIgnoredNamesRemovedListener();
 }
 
-/**
- * Loads initial options from browser local storage.
- */
+/** Loads initial options from browser local storage. */
 async function loadStorageEntries(): Promise<void> {
     isEntriesVisibleCache = await BrowserStorage.getEntriesVisible();
     ignoredNamesCache = await BrowserStorage.getIgnoredNames();

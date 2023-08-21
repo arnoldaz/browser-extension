@@ -17,7 +17,7 @@ export class ElementFinder {
     private static notInterestedButtonQuery = ".not-interested-button";
 
     private static notWatchedStatusClass = "notinmylist";
-    public static notInterestedStatusClass = "not-interested-override";
+    public static notInterestedStatusClass = "not-interested-status-top-table";
 
     public static isSupportedPage(): boolean {
         return this.findTopTable() != null || this.findSearchTables().length > 0;
@@ -31,7 +31,7 @@ export class ElementFinder {
         return document.querySelectorAll<HTMLElement>(this.searchTableQuery);
     }
 
-    public static forEachEntryStatusButtons(callback: EntryStatusButtonCallback): void {
+    public static forEachEntry(callback: EntryStatusButtonCallback): void {
         const entries = this.findTopTableEntries() ?? this.findSearchTableEntries();
         entries?.forEach((entry: HTMLElement) => {
             const statusButton = this.findWatchStatusButton(entry);

@@ -1,10 +1,9 @@
 
-export type EntryStatusButtonCallback = 
-    (statusButton: StatusButton, isNotWatched: boolean, buttonParent: StatusButtonParent, entry: Entry) => void;
 
 
 
-export type EntryNameCallback = (name: string, entry: Entry) => void;
+/** Callback type for iterating through etnries. */
+export type EntryCallback = (entry: Entry, statusButton: StatusButton, isStatusInList: boolean, statusButtonParent: StatusButtonParent) => void;
 
 /** Main table HTML element type. */
 export type MainTable = HTMLElement;
@@ -16,7 +15,6 @@ export type StatusButton = HTMLElement;
 export type StatusButtonParent = HTMLElement;
 
 
-export type NotInterestedButton = HTMLElement;
 
 export function getPageWrapper(): PageWrapper | null {
     const topTablePageWrapper = new TopTablePageWrapper();
@@ -44,7 +42,7 @@ export abstract class PageWrapper {
     protected abstract readonly entryNameQuery: string;
     protected abstract readonly notWatchedStatusClass: string;
 
-    public readonly notInterestedStatusClass = "not-interested-override"; // ???
+    public abstract readonly notInterestedStatusClass: string;
 
     public tryLoadPage(): boolean {
         const mainTable = this.getMainTable();
@@ -56,24 +54,24 @@ export abstract class PageWrapper {
         return true;
     }
 
-    public forEachEntryStatusButtons(callback: EntryStatusButtonCallback): void {
+    public forEachEntry(callback: EntryCallback): void {
         this.entries.forEach((entry: Entry) => {
             const statusButton = this.getStatusButton(entry);
-            const isNotWatched = !this.isStatusWatched(statusButton);
-            const parent = statusButton.parentNode as StatusButtonParent;
-            callback(statusButton, isNotWatched, parent, entry);
+            const isStatusInList = this.isStatusWatched(statusButton);
+            const statusButtonParent = statusButton.parentNode as StatusButtonParent;
+            callback(entry, statusButton, isStatusInList, statusButtonParent);
         });
     }
 
-    protected getMainTable(): MainTable | null {
+    public getMainTable(): MainTable | null {
         return document.querySelector<MainTable>(this.mainTableQuery);
     }
 
-    protected getEntries(mainTable: MainTable): Entry[] {
+    public getEntries(mainTable: MainTable): Entry[] {
         return Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery));
     }
 
-    protected getStatusButton(entry: Entry): StatusButton {
+    public getStatusButton(entry: Entry | StatusButtonParent): StatusButton {
         return entry.querySelector<StatusButton>(this.statusButtonQuery);
     }
 
@@ -81,11 +79,10 @@ export abstract class PageWrapper {
         return entry.querySelector(this.entryNameQuery).textContent;
     }
 
-    protected isStatusWatched(watchStatusButton: StatusButton): boolean {
+    public isStatusWatched(watchStatusButton: StatusButton): boolean {
         return watchStatusButton.classList.contains(this.notInterestedStatusClass)
             || !watchStatusButton.classList.contains(this.notWatchedStatusClass)
     }
-
 }
 
 /**
@@ -111,7 +108,7 @@ export abstract class PageWrapper {
  *       // * Dropped - "dropped"
  *       // * Plan to Watch - "plantowatch"
  *       // * On-Hold - "on-hold"
- *       <a class="js-anime-watch-status ...">STATUS_TEXT</a>
+ *       <a class="js-anime-watch-status ...">Watching</a>
  *     </td>
  *   </tr>
  *   <tr class="ranking-list">...</tr>
@@ -126,6 +123,8 @@ export class TopTablePageWrapper extends PageWrapper {
     protected override readonly statusButtonQuery = "a.js-anime-watch-status";
     protected override readonly entryNameQuery = "h3.anime_ranking_h3 > a";
     protected override readonly notWatchedStatusClass = "notinmylist";
+
+    public override readonly notInterestedStatusClass = "not-interested-status-top-table";
 }
 
 /**
@@ -162,6 +161,8 @@ export class SearchTablePageWrapper extends PageWrapper {
     protected override readonly statusButtonQuery = "a.js-anime-watch-status";
     protected override readonly entryNameQuery = "h2.h2_anime_title > a";
     protected override readonly notWatchedStatusClass = "notinmylist";
+
+    public override readonly notInterestedStatusClass = "not-interested-status-search-table";
 }
 
 /**
@@ -206,7 +207,9 @@ export class SingleEntryPageWrapper extends PageWrapper {
     protected override readonly entryNameQuery = "h1.title-name";
     protected override readonly notWatchedStatusClass = "myinfo_addtolist";
 
-    protected override getEntries(mainTable: MainTable): Entry[] {
+    public override readonly notInterestedStatusClass = "not-interested-status-signle-entry";
+
+    public override getEntries(mainTable: MainTable): Entry[] {
         return Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery))
             .filter(x => x.style.display != "none");
     }
