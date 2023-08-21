@@ -73,10 +73,6 @@ export class ButtonTransformer {
         setElementVisibleStatus(notInterestedButton, false);
         
         callback(entry);
-        // const entryName = this.pageWrapper.getEntryName(entry);
-        // hideEntryIfNotVisible(entry);
-        // ignoredNamesCache.add(entryName);
-        // BrowserStorage.addIgnoredName(entryName);
     }
 
     /**

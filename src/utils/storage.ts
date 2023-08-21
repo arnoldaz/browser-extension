@@ -1,27 +1,28 @@
+import { EntryVisibilityStatus } from "./entryVisiblityStatus";
 
 /** Helper class for managing data in browser local storage. */
 export class BrowserStorage {
-    private static readonly entriesVisibleKey = "entries-visible";
+    private static readonly entryVisiblityKey = "entry-visibility-status";
     private static readonly ignoredNamesKey = "ignored-names";
 
     /**
-     * Sets entries visible value in local storage.
+     * Sets entry visiblity value in local storage.
      * @param value Value to set.
      */
-    public static async setEntriesVisible(value: boolean): Promise<void> {
-        await browser.storage.local.set({ [this.entriesVisibleKey]: value });
+    public static async setEntryVisibility(value: EntryVisibilityStatus): Promise<void> {
+        await browser.storage.local.set({ [this.entryVisiblityKey]: value });
     }
 
     /**
      * Adds listener for entries visible value change in local storage.
      * @param callback Callback to call when entries visible value has changed.
      */
-    public static setEntriesVisibleCallback(callback: (newVisibleValue: boolean) => void): void {
+    public static setEntryVisibilityCallback(callback: (newVisibleValue: EntryVisibilityStatus) => void): void {
         browser.storage.onChanged.addListener((changes, areaName) => {
             if (areaName != "local")
                 return;
 
-            const value = changes[this.entriesVisibleKey];
+            const value = changes[this.entryVisiblityKey];
             if (!value)
                 return;
 
@@ -33,14 +34,11 @@ export class BrowserStorage {
      * Gets entries visible value from local storage.
      * @returns Saved entries visible value. Defaults to true if never set.
      */
-    public static async getEntriesVisible(): Promise<boolean> {
-        return new Promise<boolean>((resolve) => {
-            browser.storage.local.get(this.entriesVisibleKey).then((dictionary) => {
-                const isVisible = dictionary[this.entriesVisibleKey] as boolean | undefined;
-                if (isVisible === undefined)
-                    resolve(true);
-
-                resolve(isVisible);
+    public static async getEntryVisibility(): Promise<EntryVisibilityStatus> {
+        return new Promise<EntryVisibilityStatus>((resolve) => {
+            browser.storage.local.get(this.entryVisiblityKey).then(dictionary => {
+                const entryVisiblityStatus = dictionary[this.entryVisiblityKey] as EntryVisibilityStatus | undefined;
+                resolve(entryVisiblityStatus ?? EntryVisibilityStatus.Default);
             });
         });
     }
@@ -73,13 +71,10 @@ export class BrowserStorage {
      * @returns All saved ignored names.
      */
     public static async getIgnoredNames(): Promise<Set<string>> {
-        return new Promise<Set<string>>((resolve) => {
+        return new Promise<Set<string>>(resolve => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
                 const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
-                if (currentNameList === undefined)
-                    resolve(new Set());
-
-                resolve(currentNameList);
+                resolve(currentNameList ?? new Set());
             });
         });
     }
@@ -89,7 +84,7 @@ export class BrowserStorage {
      * @param name Ignored name to add.
      */
     public static async addIgnoredName(name: string): Promise<void> {
-        return new Promise<void>((resolve) => {
+        return new Promise<void>(resolve => {
             browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
                 const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
                 if (currentNameList === undefined)
@@ -130,5 +125,19 @@ export class BrowserStorage {
      */
     public static async clearIgnoredNames(): Promise<void> {
         await browser.storage.local.remove(this.ignoredNamesKey);
+    }
+
+    /**
+     * Checks whether given name exists in ignored name storage.
+     * @param nameToCheck Name to check whether it's in storage.
+     * @returns True if name is in storage, false otherwise.
+     */
+    public static async checkIgnoredName(nameToCheck: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                resolve(currentNameList.has(nameToCheck));
+            });
+        });
     }
 }

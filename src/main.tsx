@@ -1,37 +1,16 @@
-import { ElementFinder } from "./utils/elementFinder";
 import { BrowserStorage } from "./utils/storage";
 import { Entry, getPageWrapper, PageWrapper } from "./utils/pageWrappers";
 import { ButtonTransformer, setElementVisibleStatus } from "./utils/buttonTransformer";
-
-
-/** Status for entry visibility when list page is open. */
-export enum EntryVisibilityStatus {
-    /**
-     * Default status where everything is visible.
-     */
-    Default = "default",
-    /**
-     * Hides entries in list (watching, completed, etc) and not interested,
-     * leaving only entries not in any list.
-     */
-    NotInListOnly = "not-in-list-only",
-    /**
-     * Hides only not interested entries, leaving all the other entries.
-     */
-    HideNotInteresteOnly = "hide-not-interested",
-    /**
-     * Leaves only entries in list (watching, completed, etc) by hiding all not interested
-     * and not in list entries.
-     */
-    InListOnly = "in-list-only",
-}
+import { EntryVisibilityStatus, getElementVisibility } from "./utils/entryVisiblityStatus";
 
 /**
- * Helper function to instantly hide entry if currently entries are set to not be visible.
+ * Helper function to instantly hide entry if its set to be not visible based on cached parameters.
  * @param entry Entry to conditionally hide.
+ * @param entryName Entry name to check for ignored names cache.
+ * @param inStatusInList Whether entry status is in list.
  */
-function hideEntryIfNotVisible(entry: Entry): void {
-    if (!isEntriesVisibleCache)
+function hideEntryIfNotVisible(entry: Entry, entryName: string, isStatusInList: boolean): void {
+    if (!getElementVisibility(entryVisibilityCache, isStatusInList, ignoredNamesCache.has(entryName)))
         setElementVisibleStatus(entry, false);
 }
 
@@ -40,10 +19,10 @@ function initPage(): void {
     if (!ensurePageWrapperInitialized())
         return;
 
-    pageWrapper.forEachEntry((entry, statusButton, isStatusInList, buttonParent) => {
+    pageWrapper.forEachEntry((entry, entryName, statusButton, isStatusInList, buttonParent) => {
         // If entry is in list, no need to add any additional functionality, just edit visibility if needed
         if (isStatusInList) {
-            hideEntryIfNotVisible(entry);
+            hideEntryIfNotVisible(entry, entryName, isStatusInList);
             return;
         }
 
@@ -51,25 +30,25 @@ function initPage(): void {
         let isVisible = true;
         if (ignoredNamesCache.has(pageWrapper.getEntryName(entry))) {
             buttonTransformer.transformNotInterestedStatusButton(statusButton);
-            hideEntryIfNotVisible(entry);
+            hideEntryIfNotVisible(entry, entryName, isStatusInList);
             isVisible = false;
         }
 
         // If entry is not in list, attach new button besides it, but only once
         if (!isInitialized) {
-            const newButton = buttonTransformer.createNotInterestedButton(entry, isVisible, (entry) => {
-                hideEntryIfNotVisible(entry);
-                
+            const newButton = buttonTransformer.createNotInterestedButton(entry, isVisible, entry => {
                 const entryName = this.pageWrapper.getEntryName(entry);
+                hideEntryIfNotVisible(entry, entryName, isStatusInList);
+
                 ignoredNamesCache.add(entryName);
                 BrowserStorage.addIgnoredName(entryName);
             });
+
             buttonParent.appendChild(newButton);
         }
     });
 
-    ElementFinder.findSeasonalAds()?.forEach(ad => setElementVisibleStatus(ad, false));
-
+    pageWrapper.getRemovableElements().forEach(element => setElementVisibleStatus(element, false));
     isInitialized = true;
 };
 
@@ -87,17 +66,18 @@ function ensurePageWrapperInitialized(): boolean {
 
 /** Adds listener for entries visible value to live refresh entry visibility. */
 function initVisibleChangedListener(): void {
-    BrowserStorage.setEntriesVisibleCallback((newIsEntriesVisibleValue: boolean) => {
+    BrowserStorage.setEntryVisibilityCallback(newEntryVisibilityValue => {
         if (!ensurePageWrapperInitialized())
             return;
     
-        isEntriesVisibleCache = newIsEntriesVisibleValue;
-        pageWrapper.forEachEntry((entry, _statusButton, isStatusInList, _buttonParent) => {
-            if (isStatusInList)
-                setElementVisibleStatus(entry, newIsEntriesVisibleValue);
+        entryVisibilityCache = newEntryVisibilityValue;
+
+        pageWrapper.forEachEntry((entry, entryName, _statusButton, isStatusInList, _buttonParent) => {
+            const visible = getElementVisibility(newEntryVisibilityValue, isStatusInList, ignoredNamesCache.has(entryName));
+            setElementVisibleStatus(entry, visible);
         });
 
-        ElementFinder.findSeasonalAds()?.forEach(ad => setElementVisibleStatus(ad, false));
+        pageWrapper.getRemovableElements().forEach(element => setElementVisibleStatus(element, false));
     });
 }
 
@@ -108,8 +88,8 @@ function initIgnoredNamesRemovedListener(): void {
             return;
 
         ignoredNamesCache.delete(removedName);
-        pageWrapper.forEachEntry((entry, statusButton, _isStatusInList, buttonParent) => {
-            if (pageWrapper.getEntryName(entry) !== removedName)
+        pageWrapper.forEachEntry((entry, entryName, statusButton, _isStatusInList, buttonParent) => {
+            if (entryName !== removedName)
                 return;
 
             const notInterestedButton = buttonTransformer.getNotInterestedButton(buttonParent);
@@ -121,14 +101,14 @@ function initIgnoredNamesRemovedListener(): void {
 }
 
 /** Cache for entries visible value. */
-let isEntriesVisibleCache: boolean;
+let entryVisibilityCache: EntryVisibilityStatus;
 /** Cache for ignored names list. */
 let ignoredNamesCache: Set<string>;
 /** Whether page has been initialized, will reset when new page loads. */
 let isInitialized = false;
 /** Page wrapper for supported pages. */
 let pageWrapper: PageWrapper | null;
-
+/** Button transformer for modifying entry status and buttons. */
 let buttonTransformer: ButtonTransformer;
 
 /**
@@ -145,10 +125,9 @@ function init(): void {
 
 /** Loads initial options from browser local storage. */
 async function loadStorageEntries(): Promise<void> {
-    isEntriesVisibleCache = await BrowserStorage.getEntriesVisible();
+    entryVisibilityCache = await BrowserStorage.getEntryVisibility();
     ignoredNamesCache = await BrowserStorage.getIgnoredNames();
 }
 
 // Need to load saved initial options before initializing.
 loadStorageEntries().then(init);
-

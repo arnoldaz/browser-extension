@@ -2,8 +2,8 @@
 
 
 
-/** Callback type for iterating through etnries. */
-export type EntryCallback = (entry: Entry, statusButton: StatusButton, isStatusInList: boolean, statusButtonParent: StatusButtonParent) => void;
+/** Callback type for iterating through entries. */
+export type EntryCallback = (entry: Entry, entryName: string, statusButton: StatusButton, isStatusInList: boolean, statusButtonParent: StatusButtonParent) => void;
 
 /** Main table HTML element type. */
 export type MainTable = HTMLElement;
@@ -33,7 +33,7 @@ export function getPageWrapper(): PageWrapper | null {
 }
 
 export abstract class PageWrapper {
-    protected mainTable: MainTable;
+    protected mainTables: MainTable[];
     protected entries: Entry[];
 
     protected abstract readonly mainTableQuery: string;
@@ -45,30 +45,33 @@ export abstract class PageWrapper {
     public abstract readonly notInterestedStatusClass: string;
 
     public tryLoadPage(): boolean {
-        const mainTable = this.getMainTable();
-        if (!mainTable)
+        const mainTables = this.getMainTables();
+        if (!mainTables)
             return false;
 
-        this.mainTable = mainTable;
-        this.entries = this.getEntries(mainTable);
+        this.mainTables = mainTables;
+        this.entries = this.getEntries(mainTables);
         return true;
     }
 
     public forEachEntry(callback: EntryCallback): void {
-        this.entries.forEach((entry: Entry) => {
+        this.entries.forEach(entry => {
+            const entryName = this.getEntryName(entry);
             const statusButton = this.getStatusButton(entry);
             const isStatusInList = this.isStatusWatched(statusButton);
             const statusButtonParent = statusButton.parentNode as StatusButtonParent;
-            callback(entry, statusButton, isStatusInList, statusButtonParent);
+            callback(entry, entryName, statusButton, isStatusInList, statusButtonParent);
         });
     }
 
-    public getMainTable(): MainTable | null {
-        return document.querySelector<MainTable>(this.mainTableQuery);
+    public getMainTables(): MainTable[] {
+        return Array.from(document.querySelectorAll<MainTable>(this.mainTableQuery));
     }
 
-    public getEntries(mainTable: MainTable): Entry[] {
-        return Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery));
+    public getEntries(mainTables: MainTable[]): Entry[] {
+        return mainTables
+            .map(mainTable => Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery)))
+            .reduce((accumulator, singleTableEntries) => accumulator.concat(singleTableEntries), []);
     }
 
     public getStatusButton(entry: Entry | StatusButtonParent): StatusButton {
@@ -82,6 +85,10 @@ export abstract class PageWrapper {
     public isStatusWatched(watchStatusButton: StatusButton): boolean {
         return watchStatusButton.classList.contains(this.notInterestedStatusClass)
             || !watchStatusButton.classList.contains(this.notWatchedStatusClass)
+    }
+
+    public getRemovableElements(): HTMLElement[] {
+        return [];
     }
 }
 
@@ -132,7 +139,7 @@ export class TopTablePageWrapper extends PageWrapper {
  * 
  * ```
  * // Page structure:
- * <div class="js-categories-seasonal"> // Main table for all the entries
+ * <div class="seasonal-anime-list ..."> // Main table for all the entries
  *   <div> // Several div layers
  *     <div class="js-anime-category-producer seasonal-anime ..."> // Single entry
  *       <div> // Title div
@@ -156,13 +163,30 @@ export class TopTablePageWrapper extends PageWrapper {
  * ```
  */
 export class SearchTablePageWrapper extends PageWrapper {
-    protected override readonly mainTableQuery = "div.js-categories-seasonal";
+    protected override readonly mainTableQuery = "div.seasonal-anime-list";
     protected override readonly entriesQuery = "div.js-anime-category-producer.seasonal-anime";
     protected override readonly statusButtonQuery = "a.js-anime-watch-status";
     protected override readonly entryNameQuery = "h2.h2_anime_title > a";
     protected override readonly notWatchedStatusClass = "notinmylist";
 
     public override readonly notInterestedStatusClass = "not-interested-status-search-table";
+
+    private readonly seasonalMiddleAdQuery = "div.js-middle_ad";
+
+    public override getRemovableElements(): HTMLElement[] {
+        return this.mainTables
+            .map(mainTable => Array.from(mainTable.querySelectorAll<HTMLElement>(this.seasonalMiddleAdQuery)))
+            .reduce((accumulator, singleTableMiddleAds) => accumulator.concat(singleTableMiddleAds), []);
+    }
+
+    // const tables = this.findSearchTables();
+    // const seasonalAds: HTMLElement[] = [];
+    // tables?.forEach(table => 
+    //     table.querySelectorAll<HTMLElement>(this.seasonalMiddleAdQuery)
+    //         .forEach(entry => seasonalAds.push(entry))
+    // );
+
+    // return seasonalAds;
 }
 
 /**
@@ -209,9 +233,12 @@ export class SingleEntryPageWrapper extends PageWrapper {
 
     public override readonly notInterestedStatusClass = "not-interested-status-signle-entry";
 
-    public override getEntries(mainTable: MainTable): Entry[] {
-        return Array.from(mainTable.querySelectorAll<Entry>(this.entriesQuery))
-            .filter(x => x.style.display != "none");
+    public override getEntries(mainTables: MainTable[]): Entry[] {
+        if (mainTables.length > 1)
+            console.error("There is more than 1 table in single entry page, defaulting to first table");
+
+        return Array.from(mainTables[0].querySelectorAll<Entry>(this.entriesQuery))
+            .filter(entry => entry.style.display != "none");
     }
 
     public override getEntryName(_entry: Entry): string {
