@@ -8,6 +8,7 @@
     margin-bottom: 3px;
     margin-left: 4px;
     border-radius: 4px;
+    vertical-align: middle;
 }
 
 .not-interested-button > img {
