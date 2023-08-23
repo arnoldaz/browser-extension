@@ -29,9 +29,8 @@
 }
 
 .not-interested-status-single-entry {
-    border: 1px #910000 solid !important;
-    background-color: #ffffff00 !important;
-    color: #b82e2e !important;
+    border: 1px #550000 solid !important;
+    background-color: #550000 !important;
     pointer-events: none !important;
     padding-left: 12px !important;
 }
