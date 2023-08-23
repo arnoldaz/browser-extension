@@ -45,6 +45,11 @@ export class ButtonTransformer {
             this.originalStatusButtonText = statusButton.textContent;
 
         statusButton.textContent = this.notInterestedButtonText;
+
+        if (this.pageWrapper.notInterestedStatusParentClass) {
+            const statusButtonParent = statusButton.parentNode as StatusButtonParent;
+            statusButtonParent.classList.add(this.pageWrapper.notInterestedStatusParentClass);
+        }
     }
 
     /**

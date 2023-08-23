@@ -43,6 +43,7 @@ export abstract class PageWrapper {
     protected abstract readonly notWatchedStatusClass: string;
 
     public abstract readonly notInterestedStatusClass: string;
+    public readonly notInterestedStatusParentClass: string;
 
     /**
      * Tries to load the page into the wrapper.
@@ -50,7 +51,7 @@ export abstract class PageWrapper {
      */
     public tryLoadPage(): boolean {
         const mainTables = this.getMainTables();
-        if (!mainTables)
+        if (mainTables.length < 1)
             return false;
 
         this.mainTables = mainTables;
@@ -266,11 +267,12 @@ export class SingleEntryPageWrapper extends PageWrapper {
     protected override readonly entryNameQuery = "h1.title-name";
     protected override readonly notWatchedStatusClass = "myinfo_addtolist";
 
-    public override readonly notInterestedStatusClass = "not-interested-status-signle-entry";
+    public override readonly notInterestedStatusClass = "not-interested-status-single-entry";
+    public override readonly notInterestedStatusParentClass = "not-interested-status-parent-single-entry";
 
     public override getEntries(mainTables: MainTable[]): Entry[] {
         if (mainTables.length > 1)
-            console.error("There is more than 1 table in single entry page, defaulting to first table");
+            console.error("There is more than 1 table in single entry page, defaulting to first table anyways");
 
         return Array.from(mainTables[0].querySelectorAll<Entry>(this.entriesQuery))
             .filter(entry => entry.style.display != "none");

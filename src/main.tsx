@@ -19,7 +19,7 @@ function initPage(): void {
     if (!ensurePageWrapperInitialized())
         return;
 
-    pageWrapper.forEachEntry((entry, entryName, statusButton, isStatusInList, buttonParent) => {
+    pageWrapper.forEachEntry((entry, entryName, statusButton, isStatusInList, statusButtonParent) => {
         // If entry is in list, no need to add any additional functionality, just edit visibility if needed
         if (isStatusInList) {
             hideEntryIfNotVisible(entry, entryName, isStatusInList);
@@ -44,7 +44,7 @@ function initPage(): void {
                 BrowserStorage.addIgnoredName(entryName);
             });
 
-            buttonParent.appendChild(newButton);
+            statusButtonParent.appendChild(newButton);
         }
     });
 

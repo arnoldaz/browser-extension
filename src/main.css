@@ -32,4 +32,17 @@
     background-color: #ffffff00 !important;
     color: #b82e2e !important;
     pointer-events: none !important;
+    padding-left: 12px !important;
+}
+
+.not-interested-status-single-entry::after {
+    display: none !important;
+}
+
+.not-interested-status-parent-single-entry > select#myinfo_score {
+    pointer-events: none !important;
+}
+
+.not-interested-status-parent-single-entry > div.form-user-episode {
+    pointer-events: none !important;
 }
