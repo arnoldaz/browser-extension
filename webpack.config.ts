@@ -11,7 +11,7 @@ const config: Configuration = {
         builtAt: true
     },
     entry: {
-        main: "./src/main.tsx",
+        main: "./src/main.ts",
         popup: "./src/popup/index.tsx",
         options: "./src/options/index.tsx",
     },
