@@ -214,15 +214,6 @@ export class SearchTablePageWrapper extends PageWrapper {
             .map(mainTable => Array.from(mainTable.querySelectorAll<HTMLElement>(this.seasonalMiddleAdQuery)))
             .reduce((accumulator, singleTableMiddleAds) => accumulator.concat(singleTableMiddleAds), []);
     }
-
-    // const tables = this.findSearchTables();
-    // const seasonalAds: HTMLElement[] = [];
-    // tables?.forEach(table => 
-    //     table.querySelectorAll<HTMLElement>(this.seasonalMiddleAdQuery)
-    //         .forEach(entry => seasonalAds.push(entry))
-    // );
-
-    // return seasonalAds;
 }
 
 /**

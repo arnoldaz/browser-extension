@@ -52,6 +52,7 @@ function initPage(): void {
     isInitialized = true;
 };
 
+/** Ensures that static HTML page wrappers and transformers are initialized. */
 function ensurePageWrapperInitialized(): boolean {
     if (pageWrapper)
         return true;
@@ -111,10 +112,7 @@ let pageWrapper: PageWrapper | null;
 /** Button transformer for modifying entry status and buttons. */
 let buttonTransformer: ButtonTransformer;
 
-/**
- * Initializes document change observer to call initialization once it's loaded
- * and adds browser local storage change listeners.
- */
+/** Initializes document change observer to call actual initialization once the page is loaded. */
 function init(): void {
     const observer = new MutationObserver(initPage);
     observer.observe(document, { subtree: true, attributes: true });
@@ -129,5 +127,5 @@ async function loadStorageEntries(): Promise<void> {
     ignoredNamesCache = await BrowserStorage.getIgnoredNames();
 }
 
-// Need to load saved initial options before initializing.
+/** Extension entry point. */
 loadStorageEntries().then(init);

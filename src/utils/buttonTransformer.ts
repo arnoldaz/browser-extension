@@ -37,6 +37,7 @@ export class ButtonTransformer {
 
     /**
      * Transforms watch status button into "Not interested" status.
+     * Additionally transforms status button parent if there's a class defined for it in page wrapper.
      * @param statusButton Watch status button to transform.
      */
     public transformNotInterestedStatusButton(statusButton: StatusButton): void {

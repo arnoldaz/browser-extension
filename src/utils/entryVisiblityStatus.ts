@@ -1,4 +1,3 @@
-
 /** Status for entry visibility when list page is open. */
 export enum EntryVisibilityStatus {
     /**
