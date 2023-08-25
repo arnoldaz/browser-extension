@@ -44,6 +44,7 @@ const config: Configuration = {
             patterns: [
                 { from: "./src/manifest.json" },
                 { from: "./src/main.css" },
+                { from: "./src/images/favicon.svg" },
             ]
         }),
         new HtmlWebpackPlugin({

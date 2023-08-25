@@ -33,7 +33,7 @@ import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { TextField, Typography } from "@mui/material";
 
-import MalIcon from "../images/myanimelist.svg";
+import MalIcon from "../images/favicon.svg";
 
 
 export default function Popup() {
