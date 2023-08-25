@@ -135,6 +135,5 @@ export default function Popup(): JSX.Element {
                 </Box>
             </main>
         </ThemeProvider>
-
     );
 }
