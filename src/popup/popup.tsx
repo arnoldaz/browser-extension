@@ -51,21 +51,21 @@ export default function Popup(): JSX.Element {
     /** Opens extension options page. */
     const openExtensionSettingsPage = () => browser.runtime.openOptionsPage();
 
-    /** Formats entry name by cutting the end of the string if it's too long. */
+    /** Formats entry name by cutting off the end of the string if it's too long. */
     const formatEntryName = (name: string) => name.length < 30 ? name : (name.substring(0, 27) + "...")
 
     /**
-     * 
-     * @param entryVisibility 
+     * Changes entry visibility status in UI and in browser storage.
+     * @param newEntryVisibility Selected entry visibility status.
      */
-    const handleEntryVisibilityChanged = async (entryVisibility: EntryVisibilityStatus) => {
-        setEntryVisibility(entryVisibility);
-        await BrowserStorage.setEntryVisibility(entryVisibility);
+    const handleEntryVisibilityChanged = async (newEntryVisibility: EntryVisibilityStatus) => {
+        setEntryVisibility(newEntryVisibility);
+        await BrowserStorage.setEntryVisibility(newEntryVisibility);
     };
 
     /**
-     * 
-     * @param deletedName 
+     * Deletes entry name from UI and from browser storage.
+     * @param deletedName Entry name to delete.
      */
     const handleEntryDeleteClick = async (deletedName: string) => {
         setIgnoredNames(ignoredNames.filter(name => name != deletedName));
