@@ -1,14 +1,18 @@
 {
     "manifest_version": 2,
-    "name": "MAL not interested extension",
+    "name": "MAL extension",
     "version": "0.0.3",
-    "description": "",
+    "description": "Adds not interested functionality to MAL",
     "permissions": [
         "https://myanimelist.net/*",
         "storage",
         "contextMenus",
         "activeTab"
     ],
+    "icons": {
+        "48": "favicon.svg",
+        "96": "favicon.svg"
+    },      
     "browser_specific_settings": {
         "gecko": {
             "id": "mal-extension@arnoldaz.com"

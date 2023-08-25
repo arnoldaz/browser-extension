@@ -108,7 +108,7 @@ export default function Popup(): JSX.Element {
                     </FormControl>
                 </Box>
 
-                <List subheader={<ListSubheader>Recently added entries</ListSubheader>} dense>
+                <List subheader={<ListSubheader>Recently added not interested entries</ListSubheader>} dense>
                     {visibleIgnoredNames.map(name => {
                         return <ListItem
                             secondaryAction={
