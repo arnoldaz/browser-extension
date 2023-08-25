@@ -1,49 +1,38 @@
 .popup-main {
-    /* font-family: "Helvetica Neue", sans-serif; */
-    min-width: 500px;
     user-select: none;
+    min-width: 300px;
+    max-width: 300px;
 }
 
-.popup-checkbox {
-    margin: 0px;
-    padding-left: 0px;
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.popup-checkbox input {
+.extension-icon-box {
+    margin-top: 25px;
+    margin-left: 10px;
+}
+
+.extension-name-box {
+    margin-top: 10px;
+}
+
+.extension-version-box {
+    margin-bottom: 15px;
+}
+
+.entry-visibility-box {
+    margin-left: 12px;
+    margin-right: 12px;
+    margin-bottom: 10px;
+}
+
+.entry-name-text {
+    margin-left: 5px;
+}
+
+.export-button {
     margin-right: 5px;
-}
-
-.popup-list {
-    margin: 0px;
-    padding-left: 5px;
-    max-height: 200px;
-    overflow: hidden; 
-    overflow-y: scroll;
-    padding-bottom: 5px;
-  }
-  
-.popup-list li {
-    position: relative;
-    list-style-type: none;
-    padding-left: 15px;
-    margin-bottom: 5px;
-}
-
-.popup-list li:before {
-    content: "\00d7";
-    display: block;
-    position: absolute;
-    left: 0px;
-    width: 4px;
-    height: 11px;
-}
-
-.popup-list li:hover {
-    background-color: #e6fbff;
-}
-
-.popup-list-empty {
-    margin: 0;
-    padding-left: 5px;
-    padding-bottom: 5px;
 }

@@ -37,7 +37,7 @@ function initPage(): void {
         // If entry is not in list, attach new button besides it, but only once
         if (!isInitialized) {
             const newButton = buttonTransformer.createNotInterestedButton(entry, isVisible, entry => {
-                const entryName = this.pageWrapper.getEntryName(entry);
+                const entryName = pageWrapper.getEntryName(entry);
                 hideEntryIfNotVisible(entry, entryName, isStatusInList);
 
                 ignoredNamesCache.add(entryName);
