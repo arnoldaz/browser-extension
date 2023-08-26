@@ -5,21 +5,18 @@
     "watch": "webpack --mode=development --watch"
   },
   "dependencies": {
-    "@emotion/react": "11.11.1",
-    "@emotion/styled": "11.11.0",
-    "@mui/icons-material": "5.14.3",
-    "@mui/material": "5.14.5",
-    "@mui/utils": "5.14.5",
-    "@mui/x-data-grid": "6.11.2",
-    "react": "18.1.0",
-    "react-dom": "18.1.0"
+    "@mui/icons-material": "5.14.6",
+    "@mui/material": "5.14.6",
+    "@mui/x-data-grid": "6.12.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/firefox-webext-browser": "111.0.1",
-    "@types/node": "20.5.1",
-    "@types/react": "18.2.20",
+    "@types/node": "20.5.6",
+    "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
-    "@types/webpack": "5.28.1",
+    "@types/webpack": "5.28.2",
     "copy-webpack-plugin": "11.0.0",
     "css-loader": "6.8.1",
     "html-webpack-plugin": "5.5.3",
@@ -27,7 +24,7 @@
     "svg-url-loader": "8.0.0",
     "ts-loader": "9.4.4",
     "ts-node": "10.9.1",
-    "typescript": "5.1.6",
+    "typescript": "5.2.2",
     "webpack": "5.88.2",
     "webpack-cli": "5.1.4"
   }
