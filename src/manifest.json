@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "MAL extension",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "description": "Adds not interested functionality to MAL",
     "permissions": [
         "https://myanimelist.net/*",
