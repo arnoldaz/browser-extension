@@ -111,11 +111,3 @@ export class ButtonTransformer {
         return statusButtonParent.querySelector<NotInterestedButton>(this.notInterestedButtonQuery);
     }
 }
-
-
-
-
-
-
-
-

@@ -52,7 +52,7 @@ export default function OptionsPage() {
 
         const updatedIgnoredNames = [...ignoredNames];
         let lastIndex = updatedIgnoredNames[updatedIgnoredNames.length - 1].id;
-        newNames.forEach(newName => {
+        newNames?.forEach(newName => {
             if (!updatedIgnoredNames.find(ignoredName => ignoredName.name === newName))
                 updatedIgnoredNames.push({ id: ++lastIndex, name: newName });
         });

@@ -111,7 +111,7 @@ export class BrowserStorage {
                 if (currentNameList === undefined)
                     browser.storage.local.set({ [this.ignoredNamesKey]: new Set(names) }).then(resolve);
                 else {
-                    names.forEach(name => currentNameList.add(name));
+                    names?.forEach(name => currentNameList.add(name));
                     browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
                 }
             });
