@@ -92,8 +92,26 @@ export class BrowserStorage {
                 else {
                     if (currentNameList.has(name))
                         resolve();
-        
+
                     currentNameList.add(name);
+                    browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
+                }
+            });
+        });
+    }
+
+    /**
+     * Adds list of ignored names to local storage.
+     * @param name Ignored names to add.
+     */
+    public static async addIgnoredNames(names: string[]): Promise<void> {
+        return new Promise<void>(resolve => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                if (currentNameList === undefined)
+                    browser.storage.local.set({ [this.ignoredNamesKey]: new Set(names) }).then(resolve);
+                else {
+                    names.forEach(name => currentNameList.add(name));
                     browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
                 }
             });
@@ -115,6 +133,23 @@ export class BrowserStorage {
                     resolve();
 
                 currentNameList.delete(name);
+                browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
+            });
+        });
+    }
+
+    /**
+     * Removes list of ignored names from local storage.
+     * @param names Ignored names to remove.
+     */
+    public static async removeIgnoredNames(names: string[]): Promise<void> {
+        return new Promise<void>((resolve) => {
+            browser.storage.local.get(this.ignoredNamesKey).then((dictionary) => {
+                const currentNameList = dictionary[this.ignoredNamesKey] as Set<string> | undefined;
+                if (currentNameList === undefined)
+                    resolve();
+
+                names.forEach(name => currentNameList.delete(name));
                 browser.storage.local.set({ [this.ignoredNamesKey]: currentNameList }).then(resolve);
             });
         });

@@ -1,246 +1,150 @@
 import * as React from "react";
-import { alpha } from "@mui/material/styles";
+import { useEffect, useState } from "react";
+
 import Box from "@mui/material/Box";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
-import TableRow from "@mui/material/TableRow";
-import TableSortLabel from "@mui/material/TableSortLabel";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Checkbox from "@mui/material/Checkbox";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Switch from "@mui/material/Switch";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import { visuallyHidden } from "@mui/utils";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { DataGrid, GridColumnMenu, GridColumnMenuProps, GridRowSelectionModel, GridToolbarContainer, GridToolbarQuickFilter } from "@mui/x-data-grid";
 
+import { BrowserStorage } from "../utils/storage";
 
+/** Main entry point for extension options page UI. */
+export default function OptionsPage() {
+    /** List of ignored names to display with an addition of index for easier viewing. */
+    const [ignoredNames, setIgnoredNames] = useState<readonly { id: number, name: string }[]>([]);
 
-type Order = "asc" | "desc";
+    /** List of indexes for currently selected rows. */
+    const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>([]);
 
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-    if (b[orderBy] < a[orderBy])
-        return -1;
+    /** Whether delete confirmation window is open. */
+    const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState<boolean>(false);
 
-    if (b[orderBy] > a[orderBy])
-        return 1;
+    useEffect(() => {
+        const initializeIgnoredNames = async () => {
+            const nameSet = await BrowserStorage.getIgnoredNames();
 
-    return 0;
-}
+            let names: { id: number, name: string }[] = [];
+            let i = 0;
+            nameSet.forEach(name => names.push({ id: i++, name }));
 
-function getComparator<Key extends keyof any>(
-    order: Order,
-    orderBy: Key,
-): (
-    a: { [key in Key]: number | string },
-    b: { [key in Key]: number | string },
-) => number {
-    return order === "desc"
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-// export interface Data {
-//     id: number;
-//     name: string;
-// }
-
-export type Data = { id: number, name: string };
-
-interface OptionsTableProps {
-    data: readonly Data[];
-}
-
-export default function OptionsTable({ data }: OptionsTableProps) {
-    const [order, setOrder] = React.useState<Order>("asc");
-    const [orderBy, setOrderBy] = React.useState<string>("id");
-    const [selected, setSelected] = React.useState<readonly number[]>([]);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(20);
-
-    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
-
-    const isSelected = (name: number) => selected.indexOf(name) !== -1;
-
-    const handleRequestSort = (_event: React.MouseEvent<unknown>, property: string) => {
-        const isAsc = orderBy === property && order === "asc";
-        setOrder(isAsc ? "desc" : "asc");
-        setOrderBy(property);
-    };
-
-    // todo fix
-    const handleClick = (_event: React.MouseEvent<unknown>, name: number) => {
-        const selectedIndex = selected.indexOf(name);
-        // const newSelected2 = selected.slice();
-        // newSelected2.splice(selectedIndex, 0, name);
-        let newSelected: readonly number[] = [];
-
-        if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, name);
-        } else if (selectedIndex === 0) {
-            newSelected = newSelected.concat(selected.slice(1));
-        } else if (selectedIndex === selected.length - 1) {
-            newSelected = newSelected.concat(selected.slice(0, -1));
-        } else if (selectedIndex > 0) {
-            newSelected = newSelected.concat(
-                selected.slice(0, selectedIndex),
-                selected.slice(selectedIndex + 1),
-            );
+            setIgnoredNames(names);
         }
 
-        setSelected(newSelected);
+        initializeIgnoredNames();
+    }, []);
+
+    /** Parses JSON file. Assumes that JSON contains just an array of strings. */
+    const parseJsonFile = async (file: File): Promise<string[]> => {
+        return new Promise((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.onload = event => resolve(JSON.parse(event.target.result as string));
+            fileReader.onerror = error => reject(error);
+            fileReader.readAsText(file);
+        })
+    }
+
+    /** Imports parsed entries from JSON file into the table and browser storage. */
+    const importEntries = async (file: File): Promise<void> => {
+        const newNames = await parseJsonFile(file);
+
+        const updatedIgnoredNames = [...ignoredNames];
+        let lastIndex = updatedIgnoredNames[updatedIgnoredNames.length - 1].id;
+        newNames.forEach(newName => {
+            if (!updatedIgnoredNames.find(ignoredName => ignoredName.name === newName))
+                updatedIgnoredNames.push({ id: ++lastIndex, name: newName });
+        });
+        setIgnoredNames(updatedIgnoredNames);
+
+        await BrowserStorage.addIgnoredNames(newNames);
+    }
+
+    /** Deletes currently selected entries from the table and browser storage. */
+    const onDeleteConfirmation = async (): Promise<void> => {
+        const names = selectedRowIds.map(id => ignoredNames.find(ignoredName => ignoredName.id === id).name);
+        setIgnoredNames([...ignoredNames].filter(ignoredName => !selectedRowIds.includes(ignoredName.id)));
+
+        setDeleteConfirmationOpen(false);
+        await BrowserStorage.removeIgnoredNames(names);
     };
 
+    /** Custom DataGrid column menu to disable column removal functionality. */
+    const customColumnMenu = (props: GridColumnMenuProps) => (
+        <GridColumnMenu {...props}
+            slots={{ columnMenuColumnsItem: null }}
+        />
+    );
 
+    /** Custom DataGrid toolbar with just the search and custom buttons. */
+    const customToolbar = () => (
+        <GridToolbarContainer sx={{ p: 0.5, pb: 0, ml: 0.5, mt: 0.5 }}>
+            <GridToolbarQuickFilter />
+            <Button variant="text" component="label" startIcon={<FileUploadIcon />} size="small">
+                Import
+                <input type="file" accept="application/JSON" hidden onChange={event => importEntries(event.target.files[0])} />
+            </Button>
+            <Button variant="text" startIcon={<DeleteIcon />} size="small" disabled={selectedRowIds.length === 0}
+                onClick={() => setDeleteConfirmationOpen(true)}>
+                Delete selection
+            </Button>
+        </GridToolbarContainer>
+    );
 
     return (
-        <Box sx={{ width: "100%" }}>
-            <Paper sx={{ width: "100%", mb: 2 }}>
-                <Toolbar
-                    sx={{
-                        pl: { sm: 2 },
-                        pr: { xs: 1, sm: 1 },
-                        ...(selected.length > 0 && {
-                            bgcolor: (theme) =>
-                                alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-                        }),
+        <ThemeProvider theme={createTheme({ palette: { mode: "dark" } })}>
+            <CssBaseline />
+
+            <Box sx={{ height: "100vh", width: "100%" }}>
+                <DataGrid
+                    rows={ignoredNames}
+                    columns={[
+                        {
+                            field: "id", headerName: "ID",
+                            width: 90,
+                            editable: false, sortable: true, hideable: false,
+                        },
+                        {
+                            field: "name", headerName: "Name",
+                            flex: 1,
+                            editable: false, sortable: true, hideable: false,
+                        },
+                    ]}
+                    rowHeight={25}
+                    pageSizeOptions={[100]}
+                    checkboxSelection
+                    sx={{ 
+                        // Custom overrides to disable focused cell and column outlines
+                        "& .MuiDataGrid-columnHeader:focus-within": { outline: "none" },
+                        "& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell:focus": { outline: "none" },
                     }}
-                >
-                    {selected.length > 0 ? (
-                        <Typography
-                            sx={{ flex: "1 1 100%" }}
-                            color="inherit"
-                            variant="subtitle1"
-                            component="div"
-                        >
-                            {selected.length} selected
-                        </Typography>
-                    ) : (
-                        <Typography 
-                            sx={{ flex: "1 1 100%" }}
-                            variant="h6"
-                            id="tableTitle"
-                            component="div"
-                        >
-                            Ignored entries
-                        </Typography>
-                    )}
-                    {selected.length > 0 ? (
-                        <Tooltip title="Delete">
-                            <IconButton>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Tooltip>
-                    ) : (
-                        <Tooltip title="Filter list">
-                            <IconButton>
-                                <FilterListIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </Toolbar>
-
-                <TableContainer>
-                    <Table sx={{ minWidth: 750 }} size="small">
-                        <colgroup>
-                            <col width="2%" />
-                            <col width="5%" />
-                            <col width="90%" />
-                        </colgroup>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell padding="checkbox">
-                                    <Checkbox
-                                        color="primary"
-                                        indeterminate={selected.length > 0 && selected.length < data.length}
-                                        checked={data.length > 0 && selected.length === data.length}
-                                        onChange={event => setSelected(event.target.checked ? data.map(row => row.id) : [])}
-                                    />
-                                </TableCell>
-                                {[ 
-                                    { id: "id", label: "ID", disablePadding: true },
-                                    { id: "name", label: "Name", disablePadding: false }
-                                ].map((headCell) => (
-                                    <TableCell
-                                        key={headCell.id}
-                                        align="left"
-                                        padding={headCell.disablePadding ? "none" : "normal"}
-                                        sortDirection={orderBy === headCell.id ? order : false}
-                                    >
-                                        <TableSortLabel
-                                            active={orderBy === headCell.id}
-                                            direction={orderBy === headCell.id ? order : "asc"}
-                                            onClick={event => handleRequestSort(event, headCell.id)}
-                                        >
-                                            {headCell.label}
-                                        </TableSortLabel>
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {data.slice().sort(getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
-                                    const isItemSelected = isSelected(row.id);
-
-                                    return (
-                                        <TableRow
-                                            hover
-                                            onClick={(event) => handleClick(event, row.id)}
-                                            role="checkbox"
-                                            aria-checked={isItemSelected}
-                                            tabIndex={-1}
-                                            key={row.id}
-                                            selected={isItemSelected}
-                                        >
-                                            <TableCell padding="checkbox">
-                                                <Checkbox color="primary" checked={isItemSelected} />
-                                            </TableCell>
-                                            <TableCell
-                                                component="th" 
-                                                id={`enhanced-table-checkbox-${index}`} 
-                                                scope="row" 
-                                                padding="none"
-                                            >
-                                                {row.id}
-                                            </TableCell>
-                                            <TableCell align="left">
-                                                {row.name}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            {emptyRows > 0 && (
-                                <TableRow style={{ height: 33 * emptyRows }}>
-                                    <TableCell colSpan={6} />
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-
-                <TablePagination
-                    rowsPerPageOptions={[20, 50, 100, { label: "All", value: -1 }]}
-                    component="div"
-                    count={data.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={(_, newPage) => setPage(newPage)}
-                    onRowsPerPageChange={event => {
-                        setRowsPerPage(parseInt(event.target.value, 10));
-                        setPage(0);
-                    }}
-                    labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count}`}
+                    slots={{ columnMenu: customColumnMenu, toolbar: customToolbar }}
+                    onRowSelectionModelChange={setSelectedRowIds}
+                    rowSelectionModel={selectedRowIds}
                 />
-            </Paper>
-        </Box>
+            </Box>
+
+            <Dialog
+                open={deleteConfirmationOpen}
+                onClose={() => setDeleteConfirmationOpen(false)}>
+                <DialogTitle>
+                    Delete confirmation
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Do you really want to delete {selectedRowIds.length} selected entries from storage?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteConfirmationOpen(false)}>
+                        No
+                    </Button>
+                    <Button onClick={() => onDeleteConfirmation()} autoFocus>
+                        Yes
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </ThemeProvider>
     );
 }
